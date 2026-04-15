@@ -855,18 +855,31 @@ export class FarmPanel {
     return y + h + 8;
   }
 
-  private renderFarmerDetailCard(y: number, fi: number, name: string, level: number,
-    prodStr: string, infoLine: string, assignment: string): number {
+  private renderFarmerDetailCard(y: number, fi: number): number {
+    const f = gameState.data.farmers[fi];
     const { width } = this.scene.scale;
+    const assignment = f.assignment;
+    const level = f.level;
     const hasUpgrade = level < FARMER_MAX_LVL;
-    const h = hasUpgrade ? 110 : 82;
+
+    // Resource assignment grid layout
+    const assignments = ['repos', ...FARMER_RESOURCES];
+    const gridCols = Math.floor((width - 32) / 36);
+    const gridRows = Math.ceil(assignments.length / gridCols);
+    const gridH = gridRows * 32;
+
+    const headerH = 50; // emoji + name + level + info + timer
+    const gridSectionH = gridH + 16; // label + grid
+    const upgradeH = hasUpgrade ? 32 : 0;
+    const h = headerH + gridSectionH + upgradeH + 8;
+
     const bg = this.scene.add.graphics();
     bg.fillStyle(0xffffff, 0.92);
     bg.fillRoundedRect(8, y, width - 16, h, 10);
 
     // Header: emoji + name + level badge
     const emoji = this.scene.add.text(18, y + 14, '\u{1F468}\u200D\u{1F33E}', { fontSize: '18px' }).setOrigin(0, 0.5);
-    const nameTxt = this.scene.add.text(42, y + 14, name, {
+    const nameTxt = this.scene.add.text(42, y + 14, f.name, {
       fontSize: '11px', fontFamily: 'Arial, sans-serif', color: '#5d4037', fontStyle: 'bold',
     }).setOrigin(0, 0.5);
     const lvlBg = this.scene.add.graphics();
@@ -876,41 +889,71 @@ export class FarmPanel {
       fontSize: '11px', fontFamily: 'Arial, sans-serif', color: '#fff', fontStyle: 'bold',
     }).setOrigin(0.5);
 
-    // Info line
-    const info = this.scene.add.text(18, y + 30, infoLine, {
+    // Info line (rent + production rate)
+    const rent = Math.floor(f.hireCost * (assignment === 'repos' ? 0.05 : 0.1));
+    const info = this.scene.add.text(18, y + 30, `\u{1F3E0}${fmtN(rent)}\u{1F4B0}/mois | \u{1F4E6}${level}/min`, {
       fontSize: '11px', fontFamily: 'Arial, sans-serif', color: '#666',
     });
 
-    // Assignment row
-    const assLabel = this.scene.add.text(18, y + 48, `Recolte: ${prodStr}`, {
-      fontSize: '11px', fontFamily: 'Arial, sans-serif', color: '#333',
+    // Timer text (updated per-frame)
+    const timerTxt = this.scene.add.text(width - 18, y + 30, '', {
+      fontSize: '11px', fontFamily: 'Arial, sans-serif', color: '#27ae60', fontStyle: 'bold',
+    }).setOrigin(1, 0);
+    this.farmerTimerTexts.push({ fi, text: timerTxt });
+
+    // Assignment label
+    const resInfo = assignment !== 'repos' ? RESOURCE_INFO[assignment] : null;
+    const prodStr = assignment === 'repos' ? '\u{1F4A4} Repos' : `${resInfo?.emoji ?? ''} ${resInfo?.name ?? assignment}`;
+    const assLabel = this.scene.add.text(18, y + 46, `Recolte: ${prodStr}`, {
+      fontSize: '11px', fontFamily: 'Arial, sans-serif', color: '#333', fontStyle: 'bold',
     });
 
-    // Next assignment button
-    const assignments = ['repos', ...FARMER_RESOURCES];
-    const curIdx = assignments.indexOf(assignment);
-    const nextBtnW = 66; const nextBtnH = 20;
-    const nextBtnX = width - 22 - nextBtnW; const nextBtnY = y + 44;
-    const nBg = this.scene.add.graphics();
-    nBg.fillStyle(COLORS.blue, 1);
-    nBg.fillRoundedRect(nextBtnX, nextBtnY, nextBtnW, nextBtnH, 7);
-    const nTxt = this.scene.add.text(nextBtnX + nextBtnW / 2, nextBtnY + nextBtnH / 2, 'Suivant \u25B6', {
-      fontSize: '11px', fontFamily: 'Arial, sans-serif', color: '#fff', fontStyle: 'bold',
-    }).setOrigin(0.5);
-    const nHit = this.scene.add.rectangle(nextBtnX + nextBtnW / 2, nextBtnY + nextBtnH / 2, nextBtnW, nextBtnH, 0, 0)
-      .setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => {
-        const ni = (curIdx + 1) % assignments.length;
-        gameState.data.farmers[fi].assignment = assignments[ni];
-        gameState.emit(); this.buildActiveContent();
-      });
+    this.farmerScrollContainer.add([bg, emoji, nameTxt, lvlBg, lvlTxt, info, timerTxt, assLabel]);
+
+    // Resource selection grid
+    const gridY = y + headerH + 4;
+    const gridStartX = 16;
+    const btnS = 32; const gap = 3;
+    for (let i = 0; i < assignments.length; i++) {
+      const resKey = assignments[i];
+      const row = Math.floor(i / gridCols);
+      const col = i % gridCols;
+      const bx = gridStartX + col * (btnS + gap);
+      const by = gridY + row * (btnS + gap);
+
+      const isActive = assignment === resKey;
+      const rInfo = resKey === 'repos' ? null : RESOURCE_INFO[resKey];
+      const label = resKey === 'repos' ? '\u{1F4A4}' : (rInfo?.emoji ?? '?');
+
+      const btnBg = this.scene.add.graphics();
+      btnBg.fillStyle(isActive ? 0xe8f5e9 : 0xf5f5f5, 1);
+      btnBg.fillRoundedRect(bx, by, btnS, btnS, 5);
+      if (isActive) {
+        btnBg.lineStyle(2, 0x4caf50, 1);
+        btnBg.strokeRoundedRect(bx, by, btnS, btnS, 5);
+      }
+
+      const btnLabel = this.scene.add.text(bx + btnS / 2, by + btnS / 2 - 2, label, {
+        fontSize: '14px',
+      }).setOrigin(0.5);
+
+      const btnHit = this.scene.add.rectangle(bx + btnS / 2, by + btnS / 2, btnS, btnS, 0, 0)
+        .setInteractive({ useHandCursor: true })
+        .on('pointerdown', () => {
+          gameState.data.farmers[fi].assignment = resKey;
+          gameState.data.farmers[fi].lastProd = Date.now();
+          gameState.emit(); this.buildActiveContent();
+        });
+
+      this.farmerScrollContainer.add([btnBg, btnLabel, btnHit]);
+    }
 
     // Upgrade button
     if (hasUpgrade) {
       const upgCost = gameState.getFarmerUpgradeCost(level);
       const can = gameState.data.coins >= upgCost;
       const uBtnW = width - 40; const uBtnH = 24;
-      const uBtnX = 20; const uBtnY = y + 80;
+      const uBtnX = 20; const uBtnY = y + h - upgradeH - 2;
       const uBg = this.scene.add.graphics();
       uBg.fillStyle(can ? 0xff9800 : 0x999999, 1);
       uBg.fillRoundedRect(uBtnX, uBtnY, uBtnW, uBtnH, 7);
@@ -931,7 +974,6 @@ export class FarmPanel {
       this.farmerScrollContainer.add([uBg, uTxt]);
     }
 
-    this.farmerScrollContainer.add([bg, emoji, nameTxt, lvlBg, lvlTxt, info, assLabel, nBg, nTxt, nHit]);
     return y + h + 8;
   }
 
@@ -1214,7 +1256,26 @@ export class FarmPanel {
     this.updateDayBar();
     if (this.activeSub === 'crops') this.updateCropVisuals();
     else if (this.activeSub === 'animals') this.updateAnimalVisuals();
-    // Farmers and Aide don't need per-frame updates
+    else if (this.activeSub === 'farmers') this.updateFarmerTimers();
+  }
+
+  private updateFarmerTimers(): void {
+    const now = Date.now();
+    for (const entry of this.farmerTimerTexts) {
+      const f = gameState.data.farmers[entry.fi];
+      if (!f) continue;
+      if (f.assignment === 'repos') {
+        entry.text.setText('').setColor('#666');
+        continue;
+      }
+      const elapsed = now - f.lastProd;
+      if (elapsed >= FARMER_HARVEST_MS) {
+        entry.text.setText('\u2705 Pret!').setColor('#27ae60');
+      } else {
+        const rem = Math.ceil((FARMER_HARVEST_MS - elapsed) / 1000);
+        entry.text.setText(`\u23F1 ${rem}s`).setColor('#e67e22');
+      }
+    }
   }
 
   refresh(): void {

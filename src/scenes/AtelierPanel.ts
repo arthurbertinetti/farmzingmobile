@@ -55,6 +55,7 @@ export class AtelierPanel {
   // ouvriers sub
   private ouvrierScrollContainer!: Phaser.GameObjects.Container;
   private ouvrierContentHeight = 0;
+  private ouvrierTimerTexts: { oi: number; text: Phaser.GameObjects.Text }[] = [];
 
   // aide sub
   private aideScrollContainer!: Phaser.GameObjects.Container;
@@ -715,9 +716,9 @@ export class AtelierPanel {
 
   private renderOuvriers(): void {
     this.ouvrierScrollContainer.removeAll(true);
+    this.ouvrierTimerTexts = [];
     const { width } = this.scene.scale;
     let y = 0;
-    const now = Date.now();
     const oCount = gameState.data.ouvriers.length;
 
     // Hire
@@ -746,13 +747,8 @@ export class AtelierPanel {
           if (recipe) assignLabel = `${recipe.emoji} ${recipe.name}`;
         }
       }
-      const rent = Math.floor(o.hireCost * (o.assignment === 'repos' ? 0.06 : 0.12));
-      const elapsed = now - o.lastProd;
-      const ready = o.assignment !== 'repos' && elapsed >= OUVRIER_PROD_MS;
-      const timerStr = o.assignment === 'repos' ? '' : ready ? '\u2705 Pret!' : `\u23F1 ${Math.ceil((OUVRIER_PROD_MS - elapsed) / 1000)}s`;
-      const infoLine = `\u{1F3E0}${fmtN(rent)}\u{1F4B0}/mois | \u{1F4E6}${o.level}/cycle | ${timerStr}`;
 
-      y = this.renderOuvrierDetailCard(y, oi, o.name, o.level, assignLabel, infoLine, o.assignment, outputRecipes);
+      y = this.renderOuvrierDetailCard(y, oi, o.name, o.level, assignLabel, '', o.assignment, outputRecipes);
     }
 
     this.ouvrierContentHeight = y + 20;
@@ -787,49 +783,109 @@ export class AtelierPanel {
   }
 
   private renderOuvrierDetailCard(y: number, oi: number, name: string, level: number,
-    assignLabel: string, infoLine: string, assignment: string,
+    assignLabel: string, _infoLine: string, assignment: string,
     outputRecipes: { atelierIdx: number; recipeIdx: number }[]): number {
     const { width } = this.scene.scale;
     const hasUpgrade = level < OUVRIER_MAX_LVL;
-    const h = hasUpgrade ? 110 : 82;
+    const o = gameState.data.ouvriers[oi];
+
+    // Build assignment options: 'repos' + all output recipes
+    const assignOptions = ['repos', ...outputRecipes.map(r => `${r.atelierIdx}:${r.recipeIdx}`)];
+
+    // Calculate grid dimensions for recipe selector
+    const gridCols = Math.floor((width - 32) / 36);
+    const gridRows = Math.ceil(assignOptions.length / gridCols);
+    const gridH = gridRows * 32;
+
+    const headerH = 50; // emoji + name + level + info + timer
+    const gridSectionH = gridH + 16; // grid
+    const upgradeH = hasUpgrade ? 32 : 0;
+    const h = headerH + gridSectionH + upgradeH + 8;
+
     const bg = this.scene.add.graphics();
     bg.fillStyle(0xffffff, 0.92); bg.fillRoundedRect(8, y, width - 16, h, 10);
 
-    const emoji = this.scene.add.text(18, y + 16, '\u{1F477}', { fontSize: '18px' }).setOrigin(0, 0.5);
-    const nameTxt = this.scene.add.text(42, y + 16, name, {
-      fontSize: '12px', fontFamily: 'Arial, sans-serif', color: '#5d4037', fontStyle: 'bold',
+    // Header: emoji + name + level badge
+    const emoji = this.scene.add.text(18, y + 14, '\u{1F477}', { fontSize: '18px' }).setOrigin(0, 0.5);
+    const nameTxt = this.scene.add.text(42, y + 14, name, {
+      fontSize: '11px', fontFamily: 'Arial, sans-serif', color: '#5d4037', fontStyle: 'bold',
     }).setOrigin(0, 0.5);
     const lvlBg = this.scene.add.graphics();
-    lvlBg.fillStyle(0x8d6e63, 1); lvlBg.fillRoundedRect(width - 60, y + 6, 44, 18, 8);
-    const lvlTxt = this.scene.add.text(width - 38, y + 15, `Niv.${level}`, {
+    lvlBg.fillStyle(0x8d6e63, 1); lvlBg.fillRoundedRect(width - 60, y + 6, 44, 16, 8);
+    const lvlTxt = this.scene.add.text(width - 38, y + 14, `Niv.${level}`, {
       fontSize: '11px', fontFamily: 'Arial, sans-serif', color: '#fff', fontStyle: 'bold',
     }).setOrigin(0.5);
 
-    const info = this.scene.add.text(18, y + 32, infoLine, { fontSize: '11px', fontFamily: 'Arial, sans-serif', color: '#666' });
-    const assLbl = this.scene.add.text(18, y + 50, `Recette: ${assignLabel}`, { fontSize: '11px', fontFamily: 'Arial, sans-serif', color: '#333' });
+    // Info line (rent + production rate)
+    const rent = Math.floor(o.hireCost * (assignment === 'repos' ? 0.06 : 0.12));
+    const info = this.scene.add.text(18, y + 30, `\u{1F3E0}${fmtN(rent)}\u{1F4B0}/mois | \u{1F4E6}${level}/cycle`, {
+      fontSize: '11px', fontFamily: 'Arial, sans-serif', color: '#666',
+    });
 
-    // Next assignment
-    const assignOptions = ['repos', ...outputRecipes.map(r => `${r.atelierIdx}:${r.recipeIdx}`)];
-    const curIdx = assignOptions.indexOf(assignment);
-    const nBtnW = 72; const nBtnH = 22; const nBtnX = width - 22 - nBtnW; const nBtnY = y + 46;
-    const nBg = this.scene.add.graphics();
-    nBg.fillStyle(COLORS.blue, 1); nBg.fillRoundedRect(nBtnX, nBtnY, nBtnW, nBtnH, 7);
-    const nTxt = this.scene.add.text(nBtnX + nBtnW / 2, nBtnY + nBtnH / 2, 'Suivant \u25B6', {
-      fontSize: '11px', fontFamily: 'Arial, sans-serif', color: '#fff', fontStyle: 'bold',
-    }).setOrigin(0.5);
-    const nHit = this.scene.add.rectangle(nBtnX + nBtnW / 2, nBtnY + nBtnH / 2, nBtnW, nBtnH, 0, 0)
-      .setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => {
-        const ni = (curIdx + 1) % assignOptions.length;
-        gameState.data.ouvriers[oi].assignment = assignOptions[ni];
-        gameState.emit(); this.buildActiveContent();
-      });
+    // Timer text (updated per-frame via updateOuvrierTimers)
+    const timerTxt = this.scene.add.text(width - 18, y + 30, '', {
+      fontSize: '11px', fontFamily: 'Arial, sans-serif', color: '#27ae60', fontStyle: 'bold',
+    }).setOrigin(1, 0);
+    this.ouvrierTimerTexts.push({ oi, text: timerTxt });
 
-    // Upgrade
+    // Assignment label
+    const assLbl = this.scene.add.text(18, y + 46, `Recette: ${assignLabel}`, {
+      fontSize: '11px', fontFamily: 'Arial, sans-serif', color: '#333', fontStyle: 'bold',
+    });
+
+    this.ouvrierScrollContainer.add([bg, emoji, nameTxt, lvlBg, lvlTxt, info, timerTxt, assLbl]);
+
+    // Recipe selection grid (same pattern as farmer resource grid)
+    const gridY = y + headerH + 4;
+    const gridStartX = 16;
+    const btnS = 32; const gap = 3;
+    for (let i = 0; i < assignOptions.length; i++) {
+      const optKey = assignOptions[i];
+      const row = Math.floor(i / gridCols);
+      const col = i % gridCols;
+      const bx = gridStartX + col * (btnS + gap);
+      const by = gridY + row * (btnS + gap);
+
+      const isActive = assignment === optKey;
+
+      // Determine emoji label for this option
+      let label = '\u{1F4A4}'; // repos
+      if (optKey !== 'repos') {
+        const parts = optKey.split(':');
+        const ai = parseInt(parts[0], 10); const ri = parseInt(parts[1], 10);
+        const atelier = ATELIERS[ai]; const recipe = atelier?.recipes[ri];
+        if (recipe) label = recipe.emoji;
+      }
+
+      const btnBg = this.scene.add.graphics();
+      btnBg.fillStyle(isActive ? 0xe8f5e9 : 0xf5f5f5, 1);
+      btnBg.fillRoundedRect(bx, by, btnS, btnS, 5);
+      if (isActive) {
+        btnBg.lineStyle(2, 0x4caf50, 1);
+        btnBg.strokeRoundedRect(bx, by, btnS, btnS, 5);
+      }
+
+      const btnLabel = this.scene.add.text(bx + btnS / 2, by + btnS / 2 - 2, label, {
+        fontSize: '14px',
+      }).setOrigin(0.5);
+
+      const btnHit = this.scene.add.rectangle(bx + btnS / 2, by + btnS / 2, btnS, btnS, 0, 0)
+        .setInteractive({ useHandCursor: true })
+        .on('pointerdown', () => {
+          gameState.data.ouvriers[oi].assignment = optKey;
+          gameState.data.ouvriers[oi].lastProd = Date.now();
+          gameState.emit(); this.buildActiveContent();
+        });
+
+      this.ouvrierScrollContainer.add([btnBg, btnLabel, btnHit]);
+    }
+
+    // Upgrade button
     if (hasUpgrade) {
       const upgCost = gameState.getOuvrierUpgradeCost(level);
       const can = gameState.data.coins >= upgCost;
-      const uBtnW = width - 40; const uBtnH = 24; const uBtnX = 20; const uBtnY = y + 78;
+      const uBtnW = width - 40; const uBtnH = 24;
+      const uBtnX = 20; const uBtnY = y + h - upgradeH - 2;
       const uBg = this.scene.add.graphics();
       uBg.fillStyle(can ? 0xff9800 : 0x999999, 1); uBg.fillRoundedRect(uBtnX, uBtnY, uBtnW, uBtnH, 7);
       const uTxt = this.scene.add.text(uBtnX + uBtnW / 2, uBtnY + uBtnH / 2, `\u2B06\uFE0F Niv.${level + 1} - ${fmtN(upgCost)}\u{1F4B0}`, {
@@ -847,7 +903,7 @@ export class AtelierPanel {
       }
       this.ouvrierScrollContainer.add([uBg, uTxt]);
     }
-    this.ouvrierScrollContainer.add([bg, emoji, nameTxt, lvlBg, lvlTxt, info, assLbl, nBg, nTxt, nHit]);
+
     return y + h + 8;
   }
 
@@ -1121,7 +1177,28 @@ export class AtelierPanel {
   setVisible(v: boolean): void { this.container.setVisible(v); }
   updateVisuals(): void {
     if (this.activeSub === 'ateliers') this.updateAtelierVisuals();
+    else if (this.activeSub === 'ouvriers') this.updateOuvrierTimers();
   }
+
+  private updateOuvrierTimers(): void {
+    const now = Date.now();
+    for (const entry of this.ouvrierTimerTexts) {
+      const o = gameState.data.ouvriers[entry.oi];
+      if (!o) continue;
+      if (o.assignment === 'repos') {
+        entry.text.setText('').setColor('#666');
+        continue;
+      }
+      const elapsed = now - o.lastProd;
+      if (elapsed >= OUVRIER_PROD_MS) {
+        entry.text.setText('\u2705 Pret!').setColor('#27ae60');
+      } else {
+        const rem = Math.ceil((OUVRIER_PROD_MS - elapsed) / 1000);
+        entry.text.setText(`\u23F1 ${rem}s`).setColor('#e67e22');
+      }
+    }
+  }
+
   refresh(): void {
     this.buildSubTabs();
     this.buildActiveContent();
