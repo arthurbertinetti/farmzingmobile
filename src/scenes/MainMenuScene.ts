@@ -52,23 +52,11 @@ export class MainMenuScene extends Phaser.Scene {
     // Start button
     const hasSave = !!localStorage.getItem(SAVE_KEY);
     const btnText = hasSave ? '\u{1F69C} Continuer' : '\u{1F69C} Commencer';
+    const btnW = 200; const btnH = 50; const btnX = width / 2 - btnW / 2; const btnY = height * 0.7 - btnH / 2;
 
-    const btn = this.add.rectangle(width / 2, height * 0.7, 200, 50, COLORS.green, 1)
-      .setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => this.startGame())
-      .on('pointerover', () => btn.setFillStyle(COLORS.greenDark))
-      .on('pointerout', () => btn.setFillStyle(COLORS.green));
-
-    // Round corners via graphics
     const g = this.add.graphics();
     g.fillStyle(COLORS.green, 1);
-    g.fillRoundedRect(width / 2 - 100, height * 0.7 - 25, 200, 50, 12);
-    g.setInteractive(
-      new Phaser.Geom.Rectangle(width / 2 - 100, height * 0.7 - 25, 200, 50),
-      Phaser.Geom.Rectangle.Contains
-    );
-    g.on('pointerdown', () => this.startGame());
-    btn.setVisible(false); // hide the plain rect, use the graphics
+    g.fillRoundedRect(btnX, btnY, btnW, btnH, 12);
 
     this.add.text(width / 2, height * 0.7, btnText, {
       fontSize: '18px',
@@ -76,6 +64,13 @@ export class MainMenuScene extends Phaser.Scene {
       color: '#ffffff',
       fontStyle: 'bold',
     }).setOrigin(0.5);
+
+    // Transparent hit zone on top of everything
+    const hit = this.add.rectangle(width / 2, height * 0.7, btnW, btnH, 0, 0)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerup', () => this.startGame())
+      .on('pointerover', () => { g.clear(); g.fillStyle(COLORS.greenDark, 1); g.fillRoundedRect(btnX, btnY, btnW, btnH, 12); })
+      .on('pointerout', () => { g.clear(); g.fillStyle(COLORS.green, 1); g.fillRoundedRect(btnX, btnY, btnW, btnH, 12); });
 
     // Auto-start if save exists
     // (we still show the menu, user clicks to continue)
