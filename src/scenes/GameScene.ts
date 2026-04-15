@@ -40,6 +40,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   create(): void {
+    try {
     this.cameras.main.setBackgroundColor(0x87ceeb);
 
     // Time system
@@ -86,6 +87,14 @@ export class GameScene extends Phaser.Scene {
         this.onResize(gameSize.width, gameSize.height);
       }, 100);
     });
+    } catch (e) {
+      console.error('GameScene create error:', e);
+      // Show error on screen for mobile debugging
+      this.add.text(20, 60, `Error: ${e}`, {
+        fontSize: '12px', fontFamily: 'monospace', color: '#ff0000',
+        wordWrap: { width: this.scale.width - 40 },
+      });
+    }
   }
 
   private onResize(_w: number, _h: number): void {

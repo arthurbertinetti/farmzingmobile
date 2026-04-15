@@ -52,7 +52,7 @@ export class MainMenuScene extends Phaser.Scene {
     // Start button
     const hasSave = !!localStorage.getItem(SAVE_KEY);
     const btnText = hasSave ? '\u{1F69C} Continuer' : '\u{1F69C} Commencer';
-    const btnW = 200; const btnH = 50; const btnX = width / 2 - btnW / 2; const btnY = height * 0.7 - btnH / 2;
+    const btnW = 220; const btnH = 50; const btnX = width / 2 - btnW / 2; const btnY = height * 0.7 - btnH / 2;
 
     const g = this.add.graphics();
     g.fillStyle(COLORS.green, 1);
@@ -65,26 +65,41 @@ export class MainMenuScene extends Phaser.Scene {
       fontStyle: 'bold',
     }).setOrigin(0.5);
 
-    // Transparent hit zone on top of everything
-    const hit = this.add.rectangle(width / 2, height * 0.7, btnW, btnH, 0, 0)
+    // Transparent hit zone on top
+    this.add.rectangle(width / 2, height * 0.7, btnW, btnH, 0, 0)
       .setInteractive({ useHandCursor: true })
-      .on('pointerup', () => this.startGame())
-      .on('pointerover', () => { g.clear(); g.fillStyle(COLORS.greenDark, 1); g.fillRoundedRect(btnX, btnY, btnW, btnH, 12); })
-      .on('pointerout', () => { g.clear(); g.fillStyle(COLORS.green, 1); g.fillRoundedRect(btnX, btnY, btnW, btnH, 12); });
+      .on('pointerdown', () => this.startGame());
 
-    // Auto-start if save exists
-    // (we still show the menu, user clicks to continue)
+    // Reset save button (small, below)
+    if (hasSave) {
+      const rY = height * 0.7 + 42;
+      const rTxt = this.add.text(width / 2, rY, '\u{1F5D1}\uFE0F Nouvelle partie', {
+        fontSize: '13px', fontFamily: 'Arial, sans-serif', color: '#999',
+      }).setOrigin(0.5).setInteractive({ useHandCursor: true })
+        .on('pointerdown', () => {
+          localStorage.removeItem(SAVE_KEY);
+          this.scene.restart();
+        });
+    }
   }
 
   private startGame(): void {
-    // Load save if exists
-    gameState.load();
-    // Process offline progress since last save
-    gameState.processOffline();
-    // Ensure quests & trades are generated
-    gameState.generateQuests();
-    gameState.generateTrades();
-    gameState.ensureGardenGrid();
-    this.scene.start('GameScene');
+    try {
+      // Load save if exists
+      gameState.load();
+      // Process offline progress since last save
+      gameState.processOffline();
+      // Ensure quests & trades are generated
+      gameState.generateQuests();
+      gameState.generateTrades();
+      gameState.ensureGardenGrid();
+      this.scene.start('GameScene');
+    } catch (e) {
+      console.error('startGame error:', e);
+      // If save is corrupted, clear and retry
+      localStorage.removeItem(SAVE_KEY);
+      gameState.load();
+      this.scene.start('GameScene');
+    }
   }
 }
