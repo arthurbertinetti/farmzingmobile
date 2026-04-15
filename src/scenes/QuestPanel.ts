@@ -29,6 +29,7 @@ export class QuestPanel {
     this.scene = scene;
     this.container = scene.add.container(0, 0);
     this.container.setDepth(10);
+    this.container.setVisible(false);
     this.subTabContainer = scene.add.container(0, 0);
     this.contentContainer = scene.add.container(0, 0);
     this.scrollContainer = scene.add.container(0, 0);

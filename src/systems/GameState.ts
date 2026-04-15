@@ -701,7 +701,9 @@ class GameState {
 
     // 5 farm quests
     for (let q = 0; q < 5; q++) {
+      if (shuffledFarm.length === 0) break;
       const pick = shuffledFarm[q % shuffledFarm.length];
+      if (!pick) continue;
       const need = 3 + Math.floor(Math.random() * 148);
       const goldMult = pick.cat === 0 ? 80 : pick.cat === 1 ? 250 : 500;
       const goldR = Math.floor(need * goldMult * (1 + lv * 0.12));
@@ -726,7 +728,9 @@ class GameState {
 
     // 5 atelier quests
     for (let q = 0; q < 5; q++) {
+      if (shuffledRec.length === 0) break;
       const pick = shuffledRec[q % shuffledRec.length];
+      if (!pick) continue;
       const need = 2 + Math.floor(Math.random() * 99);
       const goldR = Math.floor(need * 300 * (1 + lv * 0.15));
       const xpR = Math.floor(goldR * 0.25);

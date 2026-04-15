@@ -51,6 +51,7 @@ export class ShopPanel {
     this.scene = scene;
     this.container = scene.add.container(0, 0);
     this.container.setDepth(10);
+    this.container.setVisible(false);
     this.subTabContainer = scene.add.container(0, 0);
     this.scrollContainer = scene.add.container(0, 0);
     this.container.add([this.subTabContainer, this.scrollContainer]);

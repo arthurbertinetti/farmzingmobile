@@ -61,6 +61,7 @@ export class EventPanel {
   private create(): void {
     this.container = this.scene.add.container(0, 0);
     this.container.setDepth(10);
+    this.container.setVisible(false);
 
     const maskShape = this.scene.make.graphics({ x: 0, y: 0 });
     maskShape.fillRect(0, this.panelY, this.panelW, this.panelH);

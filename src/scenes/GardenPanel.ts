@@ -46,6 +46,7 @@ export class GardenPanel {
     gameState.ensureGardenGrid();
     this.container = scene.add.container(0, 0);
     this.container.setDepth(10);
+    this.container.setVisible(false);
     this.modeBarContainer = scene.add.container(0, 0);
     this.toolbarContainer = scene.add.container(0, 0);
     this.infoContainer = scene.add.container(0, 0);

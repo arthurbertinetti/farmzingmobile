@@ -19,6 +19,7 @@ export class WellWoodPanel {
     this.scene = scene;
     this.container = scene.add.container(0, 0);
     this.container.setDepth(10);
+    this.container.setVisible(false);
     this.scrollContainer = scene.add.container(0, 0);
     this.container.add(this.scrollContainer);
     this.scroller = new ScrollHelper(scene,
