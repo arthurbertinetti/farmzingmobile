@@ -665,7 +665,7 @@ class GameState {
       const gBonus = 10 + this.data.level * 15;
       wBonusTotal += wBonus;
       gBonusTotal += gBonus;
-      this.data.water = Math.min(this.data.maxWater, this.data.water + wBonus);
+      this.data.water += wBonus;
       this.data.coins += gBonus;
       this.data.totalEarned += gBonus;
     }
@@ -1185,8 +1185,8 @@ class GameState {
       }
     }
 
-    // --- Well offline accumulation ---
-    if (this.data.wellRepairs >= WELL_REPAIRS_NEEDED && this.data.lastWellTick) {
+    // --- Well offline accumulation (only if water <= maxWater, like original) ---
+    if (this.data.wellRepairs >= WELL_REPAIRS_NEEDED && this.data.lastWellTick && this.data.water <= this.data.maxWater) {
       const wellGain = Math.floor((now - this.data.lastWellTick) / 20_000);
       if (wellGain > 0) {
         this.data.wellWater += wellGain * 5;

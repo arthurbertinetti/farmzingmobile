@@ -105,10 +105,10 @@ export class HUD {
     const level = d.level;
 
     this.coinsText.setText(`\u{1F4B0}${fmtN(coins)}`);
-    this.waterText.setText(`\u{1F4A7}${water}/${d.maxWater}`);
+    this.waterText.setText(`\u{1F4A7}${fmtN(water)}`);
     this.woodText.setText(`\u{1FAB5}${fmtN(wood)}`);
-    this.starsText.setText(`\u2B50${stars}`);
-    this.levelText.setText(`\u{1F3C5}Niv.${level}`);
+    this.starsText.setText(`\u2B50${fmtN(stars)}`);
+    this.levelText.setText(`\u{1F3C5}Nv${level}`);
 
     // Flash changed values (skip first call when prev = -1)
     if (this.prevCoins >= 0 && coins !== this.prevCoins) this.flash(this.coinsText);

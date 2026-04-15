@@ -45,8 +45,8 @@ export class TimeSystem {
     }
 
     // ===== Well passive water =====
-    // Always accumulate into wellWater buffer; player collects manually.
-    if (gameState.isWellOperational()) {
+    // Only accumulate when water <= maxWater (matches original)
+    if (gameState.isWellOperational() && state.water <= state.maxWater) {
       const wellGain = Math.floor((now - state.lastWellTick) / WELL_PASSIVE_INTERVAL);
       if (wellGain > 0) {
         state.wellWater += wellGain * WELL_PASSIVE_AMOUNT;
