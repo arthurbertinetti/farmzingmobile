@@ -183,9 +183,7 @@ export class ShopPanel {
             const totalCost = pk.cost * n;
             if (gameState.data.coins < totalCost) return;
             gameState.data.coins -= totalCost;
-            if (gameState.data.water < gameState.data.maxWater) {
-              gameState.data.water = Math.min(gameState.data.maxWater, gameState.data.water + pk.amount * n);
-            }
+            gameState.data.water += pk.amount * n;
             showFloatingText(this.scene, width / 2, 200, `+${pk.amount * n}\u{1F4A7}`);
             gameState.emit(); this.refresh();
           }, y);
@@ -632,9 +630,7 @@ export class ShopPanel {
           gameState.data.coins += 10000; gameState.data.totalEarned += 10000;
           showFloatingText(this.scene, width / 2, 200, '+10000\u{1F4B0}');
         } else if (code === 'EAU') {
-          if (gameState.data.water < gameState.data.maxWater) {
-            gameState.data.water = Math.min(gameState.data.maxWater, gameState.data.water + 1000);
-          }
+          gameState.data.water += 1000;
           showFloatingText(this.scene, width / 2, 200, '+1000\u{1F4A7}');
         } else if (code === 'ZING') {
           gameState.data.coins += 1000000; gameState.data.totalEarned += 1000000;
