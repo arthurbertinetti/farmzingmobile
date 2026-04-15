@@ -179,8 +179,17 @@ export class WellWoodPanel {
     const lastTick = gameState.data.lastWellTick || now;
     const elapsed = now - lastTick;
     const nextIn = Math.max(0, Math.ceil((WELL_PASSIVE_INTERVAL - elapsed) / 1000));
-    const statusTxt = this.scene.add.text(cx, y + 132, `\u{1F4A7} +${WELL_PASSIVE_AMOUNT} eau toutes les ${WELL_PASSIVE_INTERVAL / 1000}s (prochain dans ${nextIn}s)`, {
-      fontSize: '11px', fontFamily: 'Arial, sans-serif', color: '#888',
+    let statusMsg: string;
+    let statusColor: string;
+    if (gameState.data.water > gameState.data.maxWater) {
+      statusMsg = '\u26A0\uFE0F Eau au-dessus du maximum \u2014 generation en pause';
+      statusColor = '#e67e22';
+    } else {
+      statusMsg = `\u{1F4A7} +${WELL_PASSIVE_AMOUNT} eau toutes les ${WELL_PASSIVE_INTERVAL / 1000}s (prochain dans ${nextIn}s)`;
+      statusColor = '#888';
+    }
+    const statusTxt = this.scene.add.text(cx, y + 132, statusMsg, {
+      fontSize: '11px', fontFamily: 'Arial, sans-serif', color: statusColor,
     }).setOrigin(0.5);
 
     this.scrollContainer.add([emoji, tapHit, opTxt, waterTxt, accumTxt, statusTxt]);

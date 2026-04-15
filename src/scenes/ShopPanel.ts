@@ -153,7 +153,7 @@ export class ShopPanel {
           const totalCost = pk.cost * n;
           if (gameState.data.coins < totalCost) return;
           gameState.data.coins -= totalCost;
-          gameState.data.water += pk.amount * n;
+          gameState.data.water = Math.min(gameState.data.maxWater, gameState.data.water + pk.amount * n);
           showFloatingText(this.scene, width / 2, 200, `+${pk.amount * n}\u{1F4A7}`);
           gameState.emit(); this.refresh();
         }, y);

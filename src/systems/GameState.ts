@@ -665,7 +665,7 @@ class GameState {
       const gBonus = 10 + this.data.level * 15;
       wBonusTotal += wBonus;
       gBonusTotal += gBonus;
-      this.data.water += wBonus;
+      this.data.water = Math.min(this.data.maxWater, this.data.water + wBonus);
       this.data.coins += gBonus;
       this.data.totalEarned += gBonus;
     }

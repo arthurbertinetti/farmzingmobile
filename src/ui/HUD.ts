@@ -105,7 +105,7 @@ export class HUD {
     const level = d.level;
 
     this.coinsText.setText(`\u{1F4B0}${fmtN(coins)}`);
-    this.waterText.setText(`\u{1F4A7}${fmtN(water)}`);
+    this.waterText.setText(`\u{1F4A7}${fmtN(water)}/${fmtN(d.maxWater)}`);
     this.woodText.setText(`\u{1FAB5}${fmtN(wood)}`);
     this.starsText.setText(`\u2B50${fmtN(stars)}`);
     this.levelText.setText(`\u{1F3C5}Nv${level}`);
