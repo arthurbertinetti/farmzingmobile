@@ -22,6 +22,7 @@ const WATER_PACKS = [
 
 type ShopTab = 'buy' | 'sell' | 'upgrades' | 'autre';
 type SellCat = 'cultures' | 'arbres' | 'animaux' | 'ateliers';
+type BuyCat = 'eau' | 'cultures' | 'arbres';
 
 // Resource category mappings for sell sub-tabs
 const SELL_CAT_CROP: string[] = [
@@ -36,7 +37,8 @@ const SELL_CAT_TREE: string[] = [
 ];
 const SELL_CAT_ANIMAL: string[] = [
   'lait', 'oeuf', 'laine', 'lait_chevre', 'miel', 'viande_porc',
-  'viande_dinde', 'plume', 'fourrure',
+  'viande_dinde', 'plume', 'fourrure', 'steak', 'plume_blanche',
+  'oeuf_tortue', 'nageoire', 'canne_sucre', 'corne',
 ];
 
 export class ShopPanel {
@@ -46,6 +48,7 @@ export class ShopPanel {
   private scrollContainer!: Phaser.GameObjects.Container;
   private activeTab: ShopTab = 'buy';
   private sellCat: SellCat = 'cultures';
+  private buyCat: BuyCat = 'eau';
   private contentHeight = 0;
   private scroller!: ScrollHelper;
 
@@ -146,48 +149,90 @@ export class ShopPanel {
   private renderBuy(): void {
     let y = 0;
     const { width } = this.scene.scale;
-    y = this.renderSectionHeader('\u{1F4A7} Eau', y);
-    WATER_PACKS.forEach(pk => {
-      y = this.renderBuyQtyItem('\u{1F4A7}', pk.label, 'Recharge immediate',
-        pk.cost, pk.amount, (n) => {
-          const totalCost = pk.cost * n;
-          if (gameState.data.coins < totalCost) return;
-          gameState.data.coins -= totalCost;
-          gameState.data.water = Math.min(gameState.data.maxWater, gameState.data.water + pk.amount * n);
-          showFloatingText(this.scene, width / 2, 200, `+${pk.amount * n}\u{1F4A7}`);
-          gameState.emit(); this.refresh();
-        }, y);
+
+    // Sub-sub-tabs for buy categories
+    const buyTabs: { id: BuyCat; label: string }[] = [
+      { id: 'eau', label: '\u{1F4A7} Eau' },
+      { id: 'cultures', label: '\u{1F331} Cultures' },
+      { id: 'arbres', label: '\u{1F333} Arbres' },
+    ];
+    const tabW = (width - 16) / buyTabs.length;
+    const tabH = 24;
+    buyTabs.forEach((tab, i) => {
+      const tx = 8 + tabW * i + tabW / 2;
+      const isActive = this.buyCat === tab.id;
+      const bg = this.scene.add.graphics();
+      bg.fillStyle(isActive ? 0xfff3e0 : 0xffffff, isActive ? 1 : 0.7);
+      if (isActive) bg.lineStyle(2, COLORS.goldDark, 1);
+      bg.fillRoundedRect(tx - tabW / 2 + 2, y, tabW - 4, tabH, 7);
+      if (isActive) bg.strokeRoundedRect(tx - tabW / 2 + 2, y, tabW - 4, tabH, 7);
+      const label = this.scene.add.text(tx, y + tabH / 2, tab.label, {
+        fontSize: '11px', fontFamily: 'Arial, sans-serif', color: '#333', fontStyle: isActive ? 'bold' : 'normal',
+      }).setOrigin(0.5);
+      const hit = this.scene.add.rectangle(tx, y + tabH / 2, tabW - 4, tabH, 0, 0)
+        .setInteractive({ useHandCursor: true })
+        .on('pointerdown', () => { this.buyCat = tab.id; this.refresh(); });
+      this.scrollContainer.add([bg, label, hit]);
     });
-    y = this.renderSectionHeader('\u{1F331} Cultures', y);
-    CROPS.forEach((crop, i) => {
-      const ok = crop.reqLevel <= gameState.data.level;
-      const sv = gameState.getSellValue(0, i);
-      y = this.renderShopItem(crop.emoji,
-        crop.name + (ok ? '' : ` \u{1F512}Niv.${crop.reqLevel}`),
-        `\u23F1${crop.stageTime}s | \u{1F4B0}${fmtN(sv)} | \u2B50+${crop.xp}`,
-        `${fmtN(crop.cost)}\u{1F4B0}`, ok && gameState.data.coins >= crop.cost,
-        () => this.buyAndPlant(0, i, crop.cost), y, ok ? 1 : 0.45);
-    });
-    y = this.renderSectionHeader('\u{1F333} Arbres', y);
-    TREES.forEach((tree, i) => {
-      const ok = tree.reqLevel <= gameState.data.level;
-      const sv = gameState.getSellValue(1, i);
-      y = this.renderShopItem(tree.emoji,
-        tree.name + (ok ? '' : ` \u{1F512}Niv.${tree.reqLevel}`),
-        `\u23F1${tree.stageTime}s | \u{1F4B0}${fmtN(sv)} | \u2B50+${tree.xp}`,
-        `${fmtN(tree.cost)}\u{1F4B0}`, ok && gameState.data.coins >= tree.cost,
-        () => this.buyAndPlant(1, i, tree.cost), y, ok ? 1 : 0.45);
-    });
+    y += tabH + 8;
+
+    if (this.buyCat === 'eau') {
+      WATER_PACKS.forEach(pk => {
+        y = this.renderBuyQtyItem('\u{1F4A7}', pk.label, 'Recharge immediate',
+          pk.cost, pk.amount, (n) => {
+            const totalCost = pk.cost * n;
+            if (gameState.data.coins < totalCost) return;
+            gameState.data.coins -= totalCost;
+            gameState.data.water = Math.min(gameState.data.maxWater, gameState.data.water + pk.amount * n);
+            showFloatingText(this.scene, width / 2, 200, `+${pk.amount * n}\u{1F4A7}`);
+            gameState.emit(); this.refresh();
+          }, y);
+      });
+    } else if (this.buyCat === 'cultures') {
+      CROPS.forEach((crop, i) => {
+        const ok = crop.reqLevel <= gameState.data.level;
+        const sv = gameState.getSellValue(0, i);
+        y = this.renderBuyQtyItem(crop.emoji,
+          crop.name + (ok ? '' : ` \u{1F512}Niv.${crop.reqLevel}`),
+          `\u23F1${crop.stageTime}s | \u{1F4B0}${fmtN(sv)} | \u2B50+${crop.xp}`,
+          crop.cost, 1, (n) => {
+            if (!ok) return;
+            this.buyAndPlantN(0, i, crop.cost, n);
+          }, y);
+      });
+    } else {
+      TREES.forEach((tree, i) => {
+        const ok = tree.reqLevel <= gameState.data.level;
+        const sv = gameState.getSellValue(1, i);
+        y = this.renderBuyQtyItem(tree.emoji,
+          tree.name + (ok ? '' : ` \u{1F512}Niv.${tree.reqLevel}`),
+          `\u23F1${tree.stageTime}s | \u{1F4B0}${fmtN(sv)} | \u2B50+${tree.xp}`,
+          tree.cost, 1, (n) => {
+            if (!ok) return;
+            this.buyAndPlantN(1, i, tree.cost, n);
+          }, y);
+      });
+    }
     this.contentHeight = y;
   }
 
-  private buyAndPlant(cat: number, idx: number, cost: number): void {
-    const plot = gameState.data.plots.find(p => !p.locked && p.catIdx < 0);
-    if (!plot) { showFloatingText(this.scene, this.scene.scale.width / 2, 200, '\u274C Plus de place!', '#ff6666'); return; }
-    if (gameState.data.coins < cost) { showFloatingText(this.scene, this.scene.scale.width / 2, 200, '\u274C Pas assez!', '#ff6666'); return; }
-    gameState.data.coins -= cost; plot.catIdx = cat; plot.itemIdx = idx; plot.waterCount = 0; plot.lastWater = 0;
+  private buyAndPlantN(cat: number, idx: number, cost: number, count: number): void {
+    const { width } = this.scene.scale;
     const items = cat === 0 ? CROPS : TREES;
-    showFloatingText(this.scene, this.scene.scale.width / 2, 200, `\u{1F331} ${items[idx].name}`);
+    let planted = 0;
+    for (let n = 0; n < count; n++) {
+      const plot = gameState.data.plots.find(p => !p.locked && p.catIdx < 0);
+      if (!plot) break;
+      if (gameState.data.coins < cost) break;
+      gameState.data.coins -= cost;
+      plot.catIdx = cat; plot.itemIdx = idx; plot.waterCount = 0; plot.lastWater = 0;
+      planted++;
+    }
+    if (planted === 0) {
+      showFloatingText(this.scene, width / 2, 200, '\u274C Plus de place ou pas assez!', '#ff6666');
+    } else {
+      showFloatingText(this.scene, width / 2, 200, `\u{1F331} ${planted}\u00D7 ${items[idx].name}`);
+    }
     gameState.emit(); this.refresh();
   }
 

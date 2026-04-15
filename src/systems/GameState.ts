@@ -502,7 +502,8 @@ class GameState {
 
     if (feed.outputResource) {
       this.addResource(feed.outputResource, qty);
-    } else {
+    }
+    if (feed.coinsPerTick > 0) {
       this.data.coins += feed.coinsPerTick * qty;
       this.data.totalEarned += feed.coinsPerTick * qty;
     }
@@ -1214,7 +1215,8 @@ class GameState {
         if (feed?.outputResource) {
           this.addResource(feed.outputResource, qty);
           this.trackQuestAnimalRes(feed.outputResource, qty);
-        } else if (feed) {
+        }
+        if (feed && feed.coinsPerTick > 0) {
           this.data.coins += feed.coinsPerTick * qty;
           this.data.totalEarned += feed.coinsPerTick * qty;
         }

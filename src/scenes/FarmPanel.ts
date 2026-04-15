@@ -710,7 +710,7 @@ export class FarmPanel {
         if (feed?.outputResource) gameState.trackQuestAnimalRes(feed.outputResource, qty);
         gameState.collectAnimal(idx);
         if (feed?.outputResource) { const info = RESOURCE_INFO[feed.outputResource]; showFloatingText(this.scene, fx, fy, `+${qty} ${info?.emoji ?? ''}`, '#66ff66'); }
-        else if (feed) showFloatingText(this.scene, fx, fy, `+${fmtN(feed.coinsPerTick * qty)}\u{1F4B0}`, '#ffdd44');
+        if (feed && feed.coinsPerTick > 0) showFloatingText(this.scene, fx, fy - (feed.outputResource ? 20 : 0), `+${fmtN(feed.coinsPerTick * qty)}\u{1F4B0}`, '#ffdd44');
         const lu2 = gameState.checkLevelUp();
         if (lu2.leveled) showLevelUpBanner(this.scene, lu2.newLevel, lu2.wBonus, lu2.gBonus);
         gameState.emit(); return;
@@ -1102,7 +1102,7 @@ export class FarmPanel {
       const prodQty = gameState.getAnimalProdQty();
       let prodStr = '';
       if (feed?.outputResource) { const ri = RESOURCE_INFO[feed.outputResource]; prodStr = `${prodQty}\u00D7 ${ri?.emoji ?? ''} ${ri?.name ?? ''}`; }
-      else if (feed) prodStr = `${fmtN(feed.coinsPerTick * prodQty)}\u{1F4B0}`;
+      if (feed && feed.coinsPerTick > 0) prodStr += (prodStr ? ' + ' : '') + `${fmtN(feed.coinsPerTick * prodQty)}\u{1F4B0}`;
       const prodTime = gameState.getAnimalProdTimeMs(idx) / 1000;
       const desc = `\u{1F37D}\uFE0F ${feedStr} \u2192 ${prodStr} \u00B7 \u23F1 ${this.fmtTime(prodTime)} \u00B7 Cout: ${fmtN(animal.cost)}\u{1F4B0}`;
       const name = animal.name + (locked ? ` \u{1F512}Niv.${animal.reqLevel}` : '');

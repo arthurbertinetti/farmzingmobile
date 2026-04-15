@@ -48,6 +48,12 @@ export const RESOURCE_INFO: Record<string, ResourceInfo> = {
   viande_dinde: { name: 'Dinde',        emoji: '\u{1F983}', sellPrice: 250 },
   plume:        { name: 'Plume',        emoji: '\u{1FAB6}', sellPrice: 180 },
   fourrure:     { name: 'Fourrure',     emoji: '\u{1F407}', sellPrice: 160 },
+  steak:        { name: 'Steak',        emoji: '\u{1F969}', sellPrice: 400 },
+  plume_blanche:{ name: 'Plume blanche',emoji: '\u{1F54A}\uFE0F', sellPrice: 500 },
+  oeuf_tortue:  { name: 'Oeuf tortue',  emoji: '\u{1F422}', sellPrice: 800 },
+  nageoire:     { name: 'Nageoire',     emoji: '\u{1F42C}', sellPrice: 1200 },
+  canne_sucre:  { name: 'Canne a sucre',emoji: '\u{1F33F}', sellPrice: 1500 },
+  corne:        { name: 'Corne licorne',emoji: '\u{1F984}', sellPrice: 2500 },
 
   // ===== Transformed resources (workshop outputs) =====
   beurre:           { name: 'Beurre',           emoji: '\u{1F9C8}', sellPrice: 200 },
