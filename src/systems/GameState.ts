@@ -666,7 +666,9 @@ class GameState {
       const gBonus = 10 + this.data.level * 15;
       wBonusTotal += wBonus;
       gBonusTotal += gBonus;
-      this.data.water = Math.min(this.data.maxWater, this.data.water + wBonus);
+      if (this.data.water < this.data.maxWater) {
+        this.data.water = Math.min(this.data.maxWater, this.data.water + wBonus);
+      }
       this.data.coins += gBonus;
       this.data.totalEarned += gBonus;
     }
@@ -1094,10 +1096,12 @@ class GameState {
     const elapsed = now - this.data.lastSave;
     if (elapsed < 1000) return;
 
-    // --- Water regen: +1 every 30s ---
+    // --- Water regen: +1 every 30s (only if below maxWater) ---
     const wGain = Math.floor((now - this.data.lastWaterRegen) / 30_000);
     if (wGain > 0) {
-      this.data.water = Math.min(this.data.maxWater, this.data.water + wGain);
+      if (this.data.water < this.data.maxWater) {
+        this.data.water = Math.min(this.data.maxWater, this.data.water + wGain);
+      }
       this.data.lastWaterRegen += wGain * 30_000;
     }
 

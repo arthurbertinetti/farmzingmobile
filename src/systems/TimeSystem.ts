@@ -37,10 +37,12 @@ export class TimeSystem {
     const now = Date.now();
     const state = gameState.data;
 
-    // ===== Water regen: +1 every 30s =====
+    // ===== Water regen: +1 every 30s (only if below maxWater) =====
     const waterGain = Math.floor((now - state.lastWaterRegen) / WATER_REGEN_MS);
     if (waterGain > 0) {
-      state.water = Math.min(state.maxWater, state.water + waterGain);
+      if (state.water < state.maxWater) {
+        state.water = Math.min(state.maxWater, state.water + waterGain);
+      }
       state.lastWaterRegen += waterGain * WATER_REGEN_MS;
     }
 

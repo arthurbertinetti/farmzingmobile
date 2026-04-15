@@ -519,7 +519,9 @@ export class EventPanel {
               resultText.setText(`\u2B50 +${result.quantity} etoile(s)!`);
               break;
             case 'water':
-              state.water = Math.min(state.maxWater, state.water + result.quantity);
+              if (state.water < state.maxWater) {
+                state.water = Math.min(state.maxWater, state.water + result.quantity);
+              }
               resultText.setText(`\u{1F4A7} +${result.quantity} eau!`);
               break;
             case 'coins':
