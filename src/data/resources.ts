@@ -1,0 +1,75 @@
+// src/data/resources.ts
+
+export interface ResourceInfo {
+  name: string;
+  emoji: string;
+  sellPrice: number;
+}
+
+export const RESOURCE_INFO: Record<string, ResourceInfo> = {
+  // ===== Raw resources (harvested) =====
+  bois:         { name: 'Bois',         emoji: '\u{1FAB5}', sellPrice: 20 },
+  lait:         { name: 'Lait',         emoji: '\u{1F95B}', sellPrice: 50 },
+  ble:          { name: 'Ble',          emoji: '\u{1F33E}', sellPrice: 30 },
+  mais:         { name: 'Mais',         emoji: '\u{1F33D}', sellPrice: 35 },
+  oeuf:         { name: 'Oeuf',         emoji: '\u{1F95A}', sellPrice: 60 },
+  laine:        { name: 'Laine',        emoji: '\u{1F9F6}', sellPrice: 70 },
+  pomme:        { name: 'Pomme',        emoji: '\u{1F34E}', sellPrice: 40 },
+  fraise:       { name: 'Fraise',       emoji: '\u{1F353}', sellPrice: 55 },
+  lait_chevre:  { name: 'Lait chevre',  emoji: '\u{1F410}', sellPrice: 80 },
+  citron:       { name: 'Citron',       emoji: '\u{1F34B}', sellPrice: 50 },
+  miel:         { name: 'Miel',         emoji: '\u{1F36F}', sellPrice: 100 },
+  raisin:       { name: 'Raisin',       emoji: '\u{1F347}', sellPrice: 90 },
+  noix_coco:    { name: 'Noix coco',    emoji: '\u{1F965}', sellPrice: 120 },
+  olive:        { name: 'Olive',        emoji: '\u{1FAD2}', sellPrice: 110 },
+  tomate:       { name: 'Tomate',       emoji: '\u{1F345}', sellPrice: 25 },
+  carotte:      { name: 'Carotte',      emoji: '\u{1F955}', sellPrice: 15 },
+  oignon:       { name: 'Oignon',       emoji: '\u{1F9C5}', sellPrice: 35 },
+  patate:       { name: 'Patate',       emoji: '\u{1F954}', sellPrice: 30 },
+  champignon:   { name: 'Champignon',   emoji: '\u{1F344}', sellPrice: 80 },
+  citrouille:   { name: 'Citrouille',   emoji: '\u{1F383}', sellPrice: 120 },
+  cerise:       { name: 'Cerise',       emoji: '\u{1F352}', sellPrice: 100 },
+  fleur:        { name: 'Fleur',        emoji: '\u{1F490}', sellPrice: 150 },
+  poire:        { name: 'Poire',        emoji: '\u{1F350}', sellPrice: 45 },
+  orange:       { name: 'Orange',       emoji: '\u{1F34A}', sellPrice: 50 },
+  banane:       { name: 'Banane',       emoji: '\u{1F34C}', sellPrice: 55 },
+  peche:        { name: 'Peche',        emoji: '\u{1F351}', sellPrice: 60 },
+  mangue:       { name: 'Mangue',       emoji: '\u{1F96D}', sellPrice: 80 },
+  viande_porc:  { name: 'Porc',         emoji: '\u{1F953}', sellPrice: 200 },
+  viande_dinde: { name: 'Dinde',        emoji: '\u{1F983}', sellPrice: 250 },
+  plume:        { name: 'Plume',        emoji: '\u{1FAB6}', sellPrice: 180 },
+  fourrure:     { name: 'Fourrure',     emoji: '\u{1F407}', sellPrice: 160 },
+
+  // ===== Transformed resources (workshop outputs) =====
+  beurre:           { name: 'Beurre',           emoji: '\u{1F9C8}', sellPrice: 200 },
+  creme:            { name: 'Creme',            emoji: '\u{1F366}', sellPrice: 300 },
+  farine_ble:       { name: 'Farine ble',       emoji: '\u{1F33E}', sellPrice: 120 },
+  farine_mais:      { name: 'Farine mais',      emoji: '\u{1F33D}', sellPrice: 130 },
+  sucre:            { name: 'Sucre',            emoji: '\u{1F36C}', sellPrice: 180 },
+  fromage:          { name: 'Fromage',          emoji: '\u{1F9C0}', sellPrice: 350 },
+  jus_pomme:        { name: 'Jus pomme',        emoji: '\u{1F9C3}', sellPrice: 150 },
+  confiture:        { name: 'Confiture',        emoji: '\u{1FAD9}', sellPrice: 500 },
+  vin:              { name: 'Vin',              emoji: '\u{1F377}', sellPrice: 800 },
+  huile_olive:      { name: 'Huile olive',      emoji: '\u{1FAD7}', sellPrice: 1000 },
+  lait_coco:        { name: 'Lait coco',        emoji: '\u{1F965}', sellPrice: 900 },
+  chocolat:         { name: 'Chocolat',         emoji: '\u{1F36B}', sellPrice: 3000 },
+  sauce_tomate:     { name: 'Sauce tomate',     emoji: '\u{1F96B}', sellPrice: 250 },
+  soupe:            { name: 'Soupe',            emoji: '\u{1F372}', sellPrice: 350 },
+  jus_orange:       { name: 'Jus orange',       emoji: '\u{1F379}', sellPrice: 200 },
+  smoothie:         { name: 'Smoothie',         emoji: '\u{1F964}', sellPrice: 600 },
+  marmelade:        { name: 'Marmelade',        emoji: '\u{1F3FA}', sellPrice: 450 },
+  cidre:            { name: 'Cidre',            emoji: '\u{1F37A}', sellPrice: 700 },
+  charcuterie:      { name: 'Charcuterie',      emoji: '\u{1F953}', sellPrice: 800 },
+  saucisse:         { name: 'Saucisse',         emoji: '\u{1F32D}', sellPrice: 500 },
+  pizza:            { name: 'Pizza',            emoji: '\u{1F355}', sellPrice: 2500 },
+  risotto:          { name: 'Risotto',          emoji: '\u{1F35A}', sellPrice: 2000 },
+  tarte_citrouille: { name: 'Tarte citrouille', emoji: '\u{1F967}', sellPrice: 1500 },
+  parfum:           { name: 'Parfum',           emoji: '\u{1F33A}', sellPrice: 5000 },
+  bougie:           { name: 'Bougie',           emoji: '\u{1F56F}\uFE0F', sellPrice: 2500 },
+  coussin:          { name: 'Coussin',          emoji: '\u{1F6CB}\uFE0F', sellPrice: 1200 },
+  roti_dinde:       { name: 'Roti dinde',       emoji: '\u{1F357}', sellPrice: 3500 },
+  salade_composee:  { name: 'Salade',           emoji: '\u{1F957}', sellPrice: 400 },
+};
+
+/** All resource keys used in the game */
+export const ALL_RESOURCE_KEYS = Object.keys(RESOURCE_INFO);
