@@ -27,6 +27,8 @@ type SellCat = 'cultures' | 'arbres' | 'animaux' | 'ateliers';
 const SELL_CAT_CROP: string[] = [
   'ble', 'mais', 'fraise', 'tomate', 'carotte', 'oignon', 'patate',
   'champignon', 'citrouille', 'cerise', 'fleur',
+  'salade', 'poivron', 'concombre', 'aubergine', 'piment',
+  'brocoli', 'melon', 'pasteque', 'ail',
 ];
 const SELL_CAT_TREE: string[] = [
   'bois', 'pomme', 'poire', 'orange', 'citron', 'banane', 'peche',
@@ -146,15 +148,14 @@ export class ShopPanel {
     const { width } = this.scene.scale;
     y = this.renderSectionHeader('\u{1F4A7} Eau', y);
     WATER_PACKS.forEach(pk => {
-      y = this.renderShopItem('\u{1F4A7}', pk.label, 'Recharge immediate',
-        `${fmtN(pk.cost)}\u{1F4B0}`, gameState.data.coins >= pk.cost,
-        () => {
-          if (gameState.data.coins >= pk.cost) {
-            gameState.data.coins -= pk.cost;
-            gameState.data.water = Math.min(gameState.data.maxWater, gameState.data.water + pk.amount);
-            showFloatingText(this.scene, width / 2, 200, `+${pk.amount}\u{1F4A7}`);
-            gameState.emit(); this.refresh();
-          }
+      y = this.renderBuyQtyItem('\u{1F4A7}', pk.label, 'Recharge immediate',
+        pk.cost, pk.amount, (n) => {
+          const totalCost = pk.cost * n;
+          if (gameState.data.coins < totalCost) return;
+          gameState.data.coins -= totalCost;
+          gameState.data.water += pk.amount * n;
+          showFloatingText(this.scene, width / 2, 200, `+${pk.amount * n}\u{1F4A7}`);
+          gameState.emit(); this.refresh();
         }, y);
     });
     y = this.renderSectionHeader('\u{1F331} Cultures', y);
@@ -241,16 +242,167 @@ export class ShopPanel {
       this.scrollContainer.add(noRes); this.contentHeight = y + 80; return;
     }
     sellableKeys.forEach(key => {
-      const info = RESOURCE_INFO[key]; const qty = gameState.data.resources[key] ?? 0; if (qty <= 0) return;
-      y = this.renderShopItem(info.emoji, `${info.name} (x${qty})`, `${fmtN(info.sellPrice)}\u{1F4B0} / unite`,
-        'Vendre x1', true, () => {
-          if ((gameState.data.resources[key] ?? 0) < 1) return;
-          gameState.data.resources[key]--; gameState.data.coins += info.sellPrice; gameState.data.totalEarned += info.sellPrice;
-          showFloatingText(this.scene, width / 2, 200, `+${fmtN(info.sellPrice)}\u{1F4B0}`);
-          gameState.emit(); this.refresh();
-        }, y);
+      const info = RESOURCE_INFO[key]; if (!info) return;
+      const qty = gameState.data.resources[key] ?? 0; if (qty <= 0) return;
+      y = this.renderSellItem(key, info, qty, y);
     });
     this.contentHeight = y;
+  }
+
+  /** Render a sell row with x1, x10, and custom (pencil) buttons */
+  private renderSellItem(key: string, info: { emoji: string; name: string; sellPrice: number }, qty: number, y: number): number {
+    const { width } = this.scene.scale;
+    const itemH = 50;
+    const bg = this.scene.add.graphics();
+    bg.fillStyle(0xffffff, 1); bg.fillRoundedRect(10, y + 2, width - 20, itemH, 9);
+    const iconTxt = this.scene.add.text(26, y + itemH / 2 + 2, info.emoji, { fontSize: '22px' }).setOrigin(0.5);
+    const nameTxt = this.scene.add.text(46, y + 12, `${info.name} (x${qty})`, {
+      fontSize: '12px', fontFamily: 'Arial, sans-serif', color: '#333', fontStyle: 'bold',
+    });
+    const descTxt = this.scene.add.text(46, y + 28, `${fmtN(info.sellPrice)}\u{1F4B0} / unite`, {
+      fontSize: '11px', fontFamily: 'Arial, sans-serif', color: '#666',
+    });
+    this.scrollContainer.add([bg, iconTxt, nameTxt, descTxt]);
+
+    // Three sell buttons: x1, x10, pencil (custom)
+    const btnH = 22; const gap = 3;
+    const btnW1 = 36; const btnW10 = 36; const btnWC = 28;
+    const totalBtnW = btnW1 + gap + btnW10 + gap + btnWC;
+    let bx = width - 14 - totalBtnW;
+    const by = y + (itemH - btnH) / 2 + 2;
+
+    const doSell = (n: number) => {
+      const have = gameState.data.resources[key] ?? 0;
+      const sellQty = Math.min(n, have);
+      if (sellQty <= 0) return;
+      gameState.data.resources[key] = (gameState.data.resources[key] ?? 0) - sellQty;
+      const earned = info.sellPrice * sellQty;
+      gameState.data.coins += earned; gameState.data.totalEarned += earned;
+      showFloatingText(this.scene, width / 2, 200, `+${fmtN(earned)}\u{1F4B0}`);
+      gameState.emit(); this.refresh();
+    };
+
+    // x1 button
+    const b1Bg = this.scene.add.graphics();
+    b1Bg.fillStyle(COLORS.green, 1); b1Bg.fillRoundedRect(bx, by, btnW1, btnH, 6);
+    const b1Txt = this.scene.add.text(bx + btnW1 / 2, by + btnH / 2, 'x1', {
+      fontSize: '10px', fontFamily: 'Arial, sans-serif', color: '#fff', fontStyle: 'bold',
+    }).setOrigin(0.5);
+    const b1Hit = this.scene.add.rectangle(bx + btnW1 / 2, by + btnH / 2, btnW1, btnH, 0, 0)
+      .setInteractive({ useHandCursor: true }).on('pointerdown', () => doSell(1));
+    this.scrollContainer.add([b1Bg, b1Txt, b1Hit]);
+    bx += btnW1 + gap;
+
+    // x10 button
+    const can10 = qty >= 10;
+    const b10Bg = this.scene.add.graphics();
+    b10Bg.fillStyle(can10 ? COLORS.green : 0x999999, 1); b10Bg.fillRoundedRect(bx, by, btnW10, btnH, 6);
+    const b10Txt = this.scene.add.text(bx + btnW10 / 2, by + btnH / 2, 'x10', {
+      fontSize: '10px', fontFamily: 'Arial, sans-serif', color: '#fff', fontStyle: 'bold',
+    }).setOrigin(0.5);
+    if (can10) {
+      const b10Hit = this.scene.add.rectangle(bx + btnW10 / 2, by + btnH / 2, btnW10, btnH, 0, 0)
+        .setInteractive({ useHandCursor: true }).on('pointerdown', () => doSell(10));
+      this.scrollContainer.add(b10Hit);
+    }
+    this.scrollContainer.add([b10Bg, b10Txt]);
+    bx += btnW10 + gap;
+
+    // Custom (pencil) button
+    const bcBg = this.scene.add.graphics();
+    bcBg.fillStyle(COLORS.blue, 1); bcBg.fillRoundedRect(bx, by, btnWC, btnH, 6);
+    const bcTxt = this.scene.add.text(bx + btnWC / 2, by + btnH / 2, '\u270F\uFE0F', {
+      fontSize: '12px',
+    }).setOrigin(0.5);
+    const bcHit = this.scene.add.rectangle(bx + btnWC / 2, by + btnH / 2, btnWC, btnH, 0, 0)
+      .setInteractive({ useHandCursor: true }).on('pointerdown', () => {
+        const val = prompt(`Vendre combien de ${info.name} ? (max ${gameState.data.resources[key] ?? 0})`, '1');
+        if (val === null) return;
+        const n = parseInt(val, 10);
+        if (isNaN(n) || n <= 0) return;
+        doSell(n);
+      });
+    this.scrollContainer.add([bcBg, bcTxt, bcHit]);
+
+    return y + itemH + 4;
+  }
+
+  /** Render a buy row with x1, x10, and custom (pencil) buttons */
+  private renderBuyQtyItem(
+    icon: string, name: string, desc: string,
+    unitCost: number, unitAmount: number,
+    onBuy: (n: number) => void, y: number,
+  ): number {
+    const { width } = this.scene.scale;
+    const itemH = 50;
+    const bg = this.scene.add.graphics();
+    bg.fillStyle(0xffffff, 1); bg.fillRoundedRect(10, y + 2, width - 20, itemH, 9);
+    const iconTxt = this.scene.add.text(26, y + itemH / 2 + 2, icon, { fontSize: '22px' }).setOrigin(0.5);
+    const nameTxt = this.scene.add.text(46, y + 12, name, {
+      fontSize: '12px', fontFamily: 'Arial, sans-serif', color: '#333', fontStyle: 'bold',
+    });
+    const descTxt = this.scene.add.text(46, y + 28, `${desc} \u00B7 ${fmtN(unitCost)}\u{1F4B0}`, {
+      fontSize: '11px', fontFamily: 'Arial, sans-serif', color: '#666',
+    });
+    this.scrollContainer.add([bg, iconTxt, nameTxt, descTxt]);
+
+    // Three buy buttons: x1, x10, pencil (custom)
+    const btnH = 22; const gap = 3;
+    const btnW1 = 36; const btnW10 = 36; const btnWC = 28;
+    const totalBtnW = btnW1 + gap + btnW10 + gap + btnWC;
+    let bx = width - 14 - totalBtnW;
+    const by = y + (itemH - btnH) / 2 + 2;
+
+    const coins = gameState.data.coins;
+
+    // x1 button
+    const can1 = coins >= unitCost;
+    const b1Bg = this.scene.add.graphics();
+    b1Bg.fillStyle(can1 ? COLORS.green : 0x999999, 1); b1Bg.fillRoundedRect(bx, by, btnW1, btnH, 6);
+    const b1Txt = this.scene.add.text(bx + btnW1 / 2, by + btnH / 2, 'x1', {
+      fontSize: '10px', fontFamily: 'Arial, sans-serif', color: '#fff', fontStyle: 'bold',
+    }).setOrigin(0.5);
+    this.scrollContainer.add([b1Bg, b1Txt]);
+    if (can1) {
+      const b1Hit = this.scene.add.rectangle(bx + btnW1 / 2, by + btnH / 2, btnW1, btnH, 0, 0)
+        .setInteractive({ useHandCursor: true }).on('pointerdown', () => onBuy(1));
+      this.scrollContainer.add(b1Hit);
+    }
+    bx += btnW1 + gap;
+
+    // x10 button
+    const can10 = coins >= unitCost * 10;
+    const b10Bg = this.scene.add.graphics();
+    b10Bg.fillStyle(can10 ? COLORS.green : 0x999999, 1); b10Bg.fillRoundedRect(bx, by, btnW10, btnH, 6);
+    const b10Txt = this.scene.add.text(bx + btnW10 / 2, by + btnH / 2, 'x10', {
+      fontSize: '10px', fontFamily: 'Arial, sans-serif', color: '#fff', fontStyle: 'bold',
+    }).setOrigin(0.5);
+    this.scrollContainer.add([b10Bg, b10Txt]);
+    if (can10) {
+      const b10Hit = this.scene.add.rectangle(bx + btnW10 / 2, by + btnH / 2, btnW10, btnH, 0, 0)
+        .setInteractive({ useHandCursor: true }).on('pointerdown', () => onBuy(10));
+      this.scrollContainer.add(b10Hit);
+    }
+    bx += btnW10 + gap;
+
+    // Custom (pencil) button
+    const bcBg = this.scene.add.graphics();
+    bcBg.fillStyle(COLORS.blue, 1); bcBg.fillRoundedRect(bx, by, btnWC, btnH, 6);
+    const bcTxt = this.scene.add.text(bx + btnWC / 2, by + btnH / 2, '\u270F\uFE0F', {
+      fontSize: '12px',
+    }).setOrigin(0.5);
+    const bcHit = this.scene.add.rectangle(bx + btnWC / 2, by + btnH / 2, btnWC, btnH, 0, 0)
+      .setInteractive({ useHandCursor: true }).on('pointerdown', () => {
+        const maxAfford = Math.floor(gameState.data.coins / unitCost);
+        const val = prompt(`Acheter combien ? (max ${maxAfford})`, '1');
+        if (val === null) return;
+        const n = parseInt(val, 10);
+        if (isNaN(n) || n <= 0) return;
+        onBuy(n);
+      });
+    this.scrollContainer.add([bcBg, bcTxt, bcHit]);
+
+    return y + itemH + 4;
   }
 
   // ========== UPGRADES ==========

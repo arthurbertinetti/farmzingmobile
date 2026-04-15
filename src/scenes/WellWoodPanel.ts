@@ -105,8 +105,8 @@ export class WellWoodPanel {
       }).setOrigin(0.5);
 
       // Progress bar
-      const barW = Math.min(width * 0.8, 250);
-      const barH = 14;
+      const barW = width * 0.9;
+      const barH = 18;
       const barX = (width - barW) / 2;
       const barY = y + 82;
       const barBg = this.scene.add.graphics();
@@ -121,7 +121,7 @@ export class WellWoodPanel {
       }).setOrigin(0.5);
 
       // Repair button (brown gradient style)
-      const btnW = 160; const btnH = 36;
+      const btnW = width * 0.7; const btnH = 40;
       const btnX = (width - btnW) / 2; const btnY = barY + barH + 24;
       const btnBg = this.scene.add.graphics();
       btnBg.fillStyle(0x8b4513, 1);
@@ -188,7 +188,7 @@ export class WellWoodPanel {
     // Collect button (blue, pulsing)
     let btnBottom = y + 146;
     if (accum > 0) {
-      const btnW = 200; const btnH = 38;
+      const btnW = width * 0.8; const btnH = 42;
       const btnX = (width - btnW) / 2; const btnY = y + 146;
       const btnBg = this.scene.add.graphics();
       btnBg.fillStyle(0x2196f3, 1);
@@ -257,7 +257,7 @@ export class WellWoodPanel {
         fontSize: '12px', fontFamily: 'Arial, sans-serif', color: '#5d4037', fontStyle: 'bold',
       }).setOrigin(0.5);
 
-      const barW = Math.min(width * 0.8, 250); const barH = 14;
+      const barW = width * 0.9; const barH = 18;
       const barX = (width - barW) / 2; const barY = y + 82;
       const barBg = this.scene.add.graphics();
       barBg.fillStyle(0x3e2723, 1); barBg.fillRoundedRect(barX, barY, barW, barH, barH / 2);
@@ -269,7 +269,7 @@ export class WellWoodPanel {
         fontSize: '10px', fontFamily: 'Arial, sans-serif', color: '#888',
       }).setOrigin(0.5);
 
-      const btnW = 160; const btnH = 36;
+      const btnW = width * 0.7; const btnH = 40;
       const btnX = (width - btnW) / 2; const btnY = barY + barH + 24;
       const btnBg = this.scene.add.graphics();
       btnBg.fillStyle(0x8b4513, 1); btnBg.fillRoundedRect(btnX, btnY, btnW, btnH, 12);
@@ -326,7 +326,7 @@ export class WellWoodPanel {
 
     let btnBottom = y + 146;
     if (accum > 0) {
-      const btnW = 200; const btnH = 38;
+      const btnW = width * 0.8; const btnH = 42;
       const btnX = (width - btnW) / 2; const btnY = y + 146;
       const btnBg = this.scene.add.graphics();
       btnBg.fillStyle(0x8b4513, 1); btnBg.fillRoundedRect(btnX, btnY, btnW, btnH, 12);
